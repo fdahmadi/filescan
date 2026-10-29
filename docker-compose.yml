@@ -1,11 +1,17 @@
 services:
   api:
     image: filescan-api:local
-    build: .
+    build:
+      context: .
+      # Host DNS (systemd-resolved 127.0.0.53 is unreachable from default build netns)
+      network: host
     # Host network: Docker bridge port-publish returns empty replies on some hosts.
     # Both api and clamav use host networking so the pilot API is reachable and
     # ClamAV is reachable at 127.0.0.1:3310 without docker-proxy.
     network_mode: host
+    # Secrets (Auth-Key, API keys) live in host .env — survives image rebuild.
+    # Do not put FILESCAN_ABUSECH_AUTH_KEY in `environment:` with ${…:-} or an
+    # empty default will override env_file and wipe the key.
     env_file:
       - .env
     environment:
@@ -19,9 +25,9 @@ services:
       FILESCAN_DENYLIST_PATH: /tmp/filescan/denylist.json
       FILESCAN_ARCHIVE_MAX_DEPTH: "2"
       FILESCAN_CAPA_RULES_DIR: /opt/capa-rules
+      FILESCAN_CAPA_SIGNATURES_DIR: /opt/capa-sigs
       FILESCAN_API_KEYS: ${FILESCAN_API_KEYS:-dev-demo-key}
       FILESCAN_RATE_LIMIT_PER_MINUTE: ${FILESCAN_RATE_LIMIT_PER_MINUTE:-60}
-      FILESCAN_ABUSECH_AUTH_KEY: ${FILESCAN_ABUSECH_AUTH_KEY:-}
     volumes:
       - ./rules:/app/rules:ro
       - ./config:/app/config:ro

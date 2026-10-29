@@ -56,20 +56,45 @@ class AbuseChEngine(ScanEngine):
                 headers={"Auth-Key": self._key},
                 timeout=self._timeout,
             )
-            response.raise_for_status()
-            payload = response.json()
+            try:
+                payload = response.json()
+            except ValueError:
+                payload = {}
+            # MalwareBazaar returns JSON body even on 401/403 (e.g. unknown_auth_key)
+            query_status = str(payload.get("query_status", "")) if isinstance(payload, dict) else ""
+            if response.status_code in {401, 403} or query_status in {
+                "unknown_auth_key",
+                "auth_key_invalid",
+                "unauthorized",
+            }:
+                return EngineResult(
+                    name=self.name,
+                    status=EngineStatus.unavailable,
+                    details=(
+                        f"invalid Auth-Key ({query_status or response.status_code}) — "
+                        "recreate at https://auth.abuse.ch/ and Save profile"
+                    ),
+                    duration_ms=int((time.perf_counter() - started) * 1000),
+                )
+            if response.is_error:
+                return EngineResult(
+                    name=self.name,
+                    status=EngineStatus.error,
+                    details=f"HTTP {response.status_code}: {(response.text or '')[:200]}",
+                    duration_ms=int((time.perf_counter() - started) * 1000),
+                )
+            if not isinstance(payload, dict):
+                return EngineResult(
+                    name=self.name,
+                    status=EngineStatus.error,
+                    details="invalid JSON from MalwareBazaar",
+                    duration_ms=int((time.perf_counter() - started) * 1000),
+                )
         except httpx.HTTPError as exc:
             return EngineResult(
                 name=self.name,
                 status=EngineStatus.error,
                 details=f"HTTP error: {exc}",
-                duration_ms=int((time.perf_counter() - started) * 1000),
-            )
-        except ValueError as exc:
-            return EngineResult(
-                name=self.name,
-                status=EngineStatus.error,
-                details=f"invalid JSON: {exc}",
                 duration_ms=int((time.perf_counter() - started) * 1000),
             )
 

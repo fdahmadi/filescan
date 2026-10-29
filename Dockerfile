@@ -21,7 +21,7 @@ RUN pip install --no-cache-dir -r requirements.txt \
     && pip install --no-cache-dir flare-floss || true \
     && pip install --no-cache-dir ssdeep pytlsh || true
 
-# CAPA rules are not bundled in the pip wheel — fetch free mandiant/capa-rules.
+# CAPA rules + FLIRT signatures are not bundled in the pip wheel.
 RUN set -eux; \
     mkdir -p /opt; \
     if curl -fsSL -o /tmp/capa-rules.tar.gz \
@@ -32,6 +32,15 @@ RUN set -eux; \
     else \
       mkdir -p /opt/capa-rules; \
       echo "capa-rules download skipped/failed"; \
+    fi; \
+    if curl -fsSL -o /tmp/capa-src.tar.gz \
+      https://codeload.github.com/mandiant/capa/tar.gz/refs/heads/master; then \
+      tar -xzf /tmp/capa-src.tar.gz -C /tmp; \
+      mv /tmp/capa-*/sigs /opt/capa-sigs; \
+      rm -rf /tmp/capa-* /tmp/capa-src.tar.gz; \
+    else \
+      mkdir -p /opt/capa-sigs; \
+      echo "capa-sigs download skipped/failed"; \
     fi
 
 # Best-effort LMD install (free). If it fails, lmd engine stays unavailable.
@@ -64,6 +73,7 @@ ENV FILESCAN_YARA_RULES_DIR=/app/rules/yara \
     FILESCAN_CLAMAV_PORT=3310 \
     FILESCAN_CAPA_BIN=capa \
     FILESCAN_CAPA_RULES_DIR=/opt/capa-rules \
+    FILESCAN_CAPA_SIGNATURES_DIR=/opt/capa-sigs \
     FILESCAN_FLOSS_BIN=floss \
     FILESCAN_LMD_BIN=maldet \
     PATH="/usr/local/sbin:/usr/local/bin:${PATH}"

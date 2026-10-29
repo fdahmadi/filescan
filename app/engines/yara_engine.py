@@ -72,6 +72,7 @@ class YaraEngine(ScanEngine):
                 return EngineResult(
                     name=self.name,
                     status=EngineStatus.clean,
+                    details="no rules matched",
                     duration_ms=duration_ms,
                 )
 

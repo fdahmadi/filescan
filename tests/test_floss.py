@@ -13,6 +13,28 @@ def test_floss_skips_non_binary(tmp_path: Path):
     with patch("app.engines.floss_engine.shutil.which", return_value="/usr/bin/floss"):
         result = engine.scan(sample)
     assert result.status == EngineStatus.skipped
+    assert result.details == "skipped non-binary (PE/ELF/Mach-O)"
+
+
+def test_floss_skips_unsupported_without_raw_error(tmp_path: Path):
+    sample = tmp_path / "a.exe"
+    sample.write_bytes(b"MZ\x90\x00fake")
+    engine = FlossEngine(Settings(floss_enabled=True, floss_bin="floss"))
+
+    class Proc:
+        returncode = 1
+        stdout = ""
+        stderr = "ERROR floss: failed to load: unsupported file format"
+
+    with (
+        patch("app.engines.floss_engine.shutil.which", return_value="/usr/bin/floss"),
+        patch("app.engines.floss_engine.subprocess.run", return_value=Proc()),
+    ):
+        result = engine.scan(sample)
+
+    assert result.status == EngineStatus.skipped
+    assert result.details == "skipped unsupported file format"
+    assert "ERROR" not in (result.details or "")
 
 
 def test_floss_unavailable_without_binary(tmp_path: Path):

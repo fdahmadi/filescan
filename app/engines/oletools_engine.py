@@ -65,24 +65,45 @@ class OletoolsEngine(ScanEngine):
             )
 
         suffix = file_path.suffix.lower()
-        # Skip obvious non-office quickly; olevba can still try OLE containers
-        if suffix and suffix not in OFFICE_SUFFIXES and suffix not in {".bin", ".ole"}:
-            # Still try: some samples use wrong extensions; only skip clear text/archives handled elsewhere
-            if suffix in {".txt", ".png", ".jpg", ".jpeg", ".gif", ".zip", ".gz", ".tar"}:
-                return EngineResult(
-                    name=self.name,
-                    status=EngineStatus.skipped,
-                    details=f"skipped non-office suffix {suffix}",
-                    duration_ms=int((time.perf_counter() - started) * 1000),
-                )
+        # Only Office / raw OLE — running olevba on PE/ELF/scripts causes noise and false hits
+        if suffix not in OFFICE_SUFFIXES and suffix not in {".bin", ".ole"}:
+            label = suffix if suffix else "(no extension)"
+            return EngineResult(
+                name=self.name,
+                status=EngineStatus.skipped,
+                details=f"skipped non-office suffix {label}",
+                duration_ms=int((time.perf_counter() - started) * 1000),
+            )
 
         try:
             parser = VBA_Parser(str(file_path))
         except Exception as exc:  # noqa: BLE001
+            msg = str(exc)
+            lower = msg.lower()
+            # Not an OLE/Office container — skip, do not treat as engine failure
+            if any(
+                tok in lower
+                for tok in (
+                    "not a valid",
+                    "not an ole",
+                    "not ole",
+                    "failed to open",
+                    "open failed",
+                    "no ole",
+                    "is not a zip",
+                    "badzipfile",
+                )
+            ):
+                return EngineResult(
+                    name=self.name,
+                    status=EngineStatus.skipped,
+                    details="skipped non-OLE/Office file",
+                    duration_ms=int((time.perf_counter() - started) * 1000),
+                )
             return EngineResult(
                 name=self.name,
                 status=EngineStatus.error,
-                details=f"open failed: {exc}",
+                details=f"open failed: {msg[:200]}",
                 duration_ms=int((time.perf_counter() - started) * 1000),
             )
 

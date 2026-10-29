@@ -37,6 +37,7 @@ class CapaEngine(ScanEngine):
         self._settings = settings
         self._bin = settings.capa_bin.strip() or "capa"
         self._rules_dir = Path(settings.capa_rules_dir) if settings.capa_rules_dir else None
+        self._sigs_dir = Path(settings.capa_signatures_dir) if settings.capa_signatures_dir else None
         self._timeout = settings.capa_timeout_seconds
 
     @property
@@ -52,6 +53,57 @@ class CapaEngine(ScanEngine):
         if self._rules_dir and self._rules_dir.is_dir() and any(self._rules_dir.rglob("*.yml")):
             return ["-r", str(self._rules_dir)]
         return []
+
+    def _signatures_args(self) -> list[str]:
+        """Pass -s when a signatures dir exists (required for pip/flare-capa installs)."""
+        if self._sigs_dir and self._sigs_dir.is_dir():
+            return ["-s", str(self._sigs_dir)]
+        return []
+
+    @staticmethod
+    def _looks_like_binary(path: Path) -> bool:
+        """CAPA targets PE/ELF/.NET — skip images, docs, and plain text early."""
+        try:
+            head = path.read_bytes()[:8]
+        except OSError:
+            return False
+        if head.startswith(b"MZ") or head.startswith(b"\x7fELF"):
+            return True
+        # Mach-O thin / fat (capa may still reject; treat as candidate)
+        if head[:4] in {b"\xfe\xed\xfa\xce", b"\xfe\xed\xfa\xcf", b"\xca\xfe\xba\xbe"}:
+            return True
+        return False
+
+    @staticmethod
+    def _is_unsupported_format(stderr: str) -> bool:
+        lower = stderr.lower()
+        return any(
+            tok in lower
+            for tok in (
+                "not a pe",
+                "unsupported",
+                "no matching",
+                "file format",
+                "unknown file type",
+                "not a supported",
+                "failed to extract",
+            )
+        )
+
+    @staticmethod
+    def _is_missing_resources(stderr: str) -> bool:
+        lower = stderr.lower()
+        return any(
+            tok in lower
+            for tok in (
+                "signature path",
+                "signatures path",
+                "default signature",
+                "embedded rules not found",
+                "default embedded rules",
+                "install the signatures",
+            )
+        )
 
     def healthcheck(self) -> tuple[bool, str]:
         if not self.enabled:
@@ -72,7 +124,8 @@ class CapaEngine(ScanEngine):
             )
             detail = (proc.stdout or proc.stderr or "").strip().splitlines()[:1]
             base = detail[0] if detail else f"capa ready ({resolved})"
-            return True, f"{base}; rules={self._rules_dir}"
+            sigs = f"; sigs={self._sigs_dir}" if self._signatures_args() else "; sigs=default"
+            return True, f"{base}; rules={self._rules_dir}{sigs}"
         except (OSError, subprocess.TimeoutExpired) as exc:
             return False, str(exc)
 
@@ -80,6 +133,14 @@ class CapaEngine(ScanEngine):
         started = time.perf_counter()
         if not self.enabled:
             return EngineResult(name=self.name, status=EngineStatus.skipped, details="CAPA disabled")
+
+        if not self._looks_like_binary(file_path):
+            return EngineResult(
+                name=self.name,
+                status=EngineStatus.skipped,
+                details="skipped non-binary (PE/ELF)",
+                duration_ms=int((time.perf_counter() - started) * 1000),
+            )
 
         resolved = self._resolve_bin()
         if not resolved:
@@ -99,9 +160,10 @@ class CapaEngine(ScanEngine):
                 duration_ms=int((time.perf_counter() - started) * 1000),
             )
 
+        sigs = self._signatures_args()
         try:
             proc = subprocess.run(
-                [resolved, *rules, "-j", "-q", str(file_path)],
+                [resolved, *rules, *sigs, "-j", "-q", str(file_path)],
                 capture_output=True,
                 text=True,
                 timeout=self._timeout,
@@ -126,14 +188,20 @@ class CapaEngine(ScanEngine):
         stderr = (proc.stderr or "").strip()
         stdout = (proc.stdout or "").strip()
 
-        # Non-PE / unsupported format is common — treat as skipped, not error
+        # Unsupported format after binary magic check — skipped, not engine failure
         if proc.returncode != 0 and not stdout:
-            lower = stderr.lower()
-            if any(tok in lower for tok in ("not a pe", "unsupported", "no matching", "format")):
+            if self._is_unsupported_format(stderr):
                 return EngineResult(
                     name=self.name,
                     status=EngineStatus.skipped,
-                    details=stderr[:500] or "unsupported file format",
+                    details="skipped unsupported file format",
+                    duration_ms=duration_ms,
+                )
+            if self._is_missing_resources(stderr):
+                return EngineResult(
+                    name=self.name,
+                    status=EngineStatus.unavailable,
+                    details="capa signatures missing (set FILESCAN_CAPA_SIGNATURES_DIR)",
                     duration_ms=duration_ms,
                 )
             return EngineResult(

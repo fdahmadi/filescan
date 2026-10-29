@@ -18,6 +18,15 @@ def test_precheck_flags_dangerous_extension(tmp_path: Path):
     assert any("dangerous_extension" in t for t in result.threats)
 
 
+def test_precheck_honest_pe_exe_not_threat_alone():
+    assert REPO_TINY_PE.is_file()
+    engine = PrecheckEngine(Settings(precheck_enabled=True, yara_rules_dir=REPO_TINY_PE.parent))
+    result = engine.scan(REPO_TINY_PE)
+    assert result.status == EngineStatus.clean
+    assert not any("dangerous_extension" in t for t in result.threats)
+    assert result.details and "dangerous_extension:.exe" in result.details
+
+
 def test_precheck_clean_text(tmp_path: Path):
     sample = tmp_path / "note.txt"
     sample.write_text("hello world", encoding="utf-8")

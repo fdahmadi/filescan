@@ -67,6 +67,8 @@ class Settings(BaseSettings):
     capa_bin: str = "capa"
     # Empty = capa default/embedded rules; set to capa-rules checkout in Docker
     capa_rules_dir: Path = Path("/opt/capa-rules")
+    # FLIRT/library signatures (-s); required when capa is installed via pip (flare-capa)
+    capa_signatures_dir: Path = Path("/opt/capa-sigs")
     capa_timeout_seconds: float = 120.0
 
     # FLOSS (optional binary / flare-floss) — obfuscated string extraction

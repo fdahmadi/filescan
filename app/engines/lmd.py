@@ -119,7 +119,7 @@ class LMDEngine(ScanEngine):
         return EngineResult(
             name=self.name,
             status=EngineStatus.clean,
-            details=(output.strip()[:500] or None),
+            details="no malware detected",
             duration_ms=duration_ms,
         )
 

@@ -124,8 +124,20 @@ class PrecheckEngine(ScanEngine):
 
         if suffix in DANGEROUS_EXTENSIONS:
             details.append(f"dangerous_extension:{suffix}")
-            # Extension alone is not malicious; mark soft unless combined later
-            threats.append(f"dangerous_extension:{suffix}")
+            # Honest PE/ELF named .exe/.dll/.scr/… — extension matches content; note only.
+            # Scripts / webshells (.ps1, .php, …) stay soft threats for policy.
+            honest_native = suffix in {
+                ".exe",
+                ".dll",
+                ".scr",
+                ".com",
+                ".msi",
+            } and (
+                binary_exec
+                or (mime is not None and any(tok in mime.lower() for tok in EXECUTABLE_MIME_HINTS))
+            )
+            if not honest_native:
+                threats.append(f"dangerous_extension:{suffix}")
 
         if suffix in EXECUTABLE_LIKE and any(tok in name_l for tok in DOUBLE_EXTENSION_TOKENS):
             threats.append(f"double_extension_disguise:{name}")

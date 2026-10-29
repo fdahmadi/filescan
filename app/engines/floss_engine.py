@@ -159,11 +159,14 @@ class FlossEngine(ScanEngine):
         stderr = (proc.stderr or "").strip()
         if not stdout:
             lower = stderr.lower()
-            if any(tok in lower for tok in ("not a pe", "unsupported", "failed to load", "no matching")):
+            if any(
+                tok in lower
+                for tok in ("not a pe", "unsupported", "failed to load", "no matching", "file format")
+            ):
                 return EngineResult(
                     name=self.name,
                     status=EngineStatus.skipped,
-                    details=stderr[:500] or "unsupported file",
+                    details="skipped unsupported file format",
                     duration_ms=duration_ms,
                 )
             return EngineResult(
