@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FileScan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700;9..144,800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/ui/styles.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <main class="shell">
+    <header class="brand-block">
+      <p class="brand">FileScan</p>
+      <h1 class="headline">Scan a file. Get one verdict.</h1>
+      <p class="lede">Multi-engine malware check for demos — ClamAV, YARA, and the free local stack.</p>
+    </header>
+
+    <section class="scan-panel" aria-label="Scan controls">
+      <label class="field">
+        <span>API key</span>
+        <input id="apiKey" type="password" autocomplete="off" value="dev-demo-key" placeholder="X-API-Key" />
+      </label>
+
+      <label class="field">
+        <span>Sensitivity</span>
+        <select id="sensitivity">
+          <option value="lenient">Lenient — soft hits stay soft</option>
+          <option value="balanced" selected>Balanced — default</option>
+          <option value="strict">Strict — soft hits escalate to malicious</option>
+        </select>
+      </label>
+
+      <label class="check-field">
+        <input id="useRemoteIntel" type="checkbox" checked />
+        <span>
+          Use remote hash intel (abuse.ch / YARAify)
+          <small>Only the file hash is queried — the file itself is never uploaded. Uncheck for local-only.</small>
+        </span>
+      </label>
+
+      <div
+        id="dropzone"
+        class="dropzone"
+        tabindex="0"
+        role="button"
+        aria-label="Choose a file to scan"
+      >
+        <input id="fileInput" type="file" hidden />
+        <p class="drop-title">Drop a file here</p>
+        <p class="drop-hint">or click to browse</p>
+        <p id="fileName" class="file-name" hidden></p>
+      </div>
+
+      <div class="actions">
+        <button id="scanBtn" type="button" class="btn-primary" disabled>Scan file</button>
+        <a class="link-quiet" href="/docs" target="_blank" rel="noopener">API docs</a>
+      </div>
+      <p id="statusLine" class="status-line" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="result" class="result" hidden aria-live="polite">
+      <div class="verdict-row">
+        <p id="verdict" class="verdict">—</p>
+        <p id="summary" class="summary"></p>
+        <p id="meta" class="meta"></p>
+      </div>
+      <div id="engines" class="engines"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span id="healthLine">Checking service…</span>
+  </footer>
+
+  <script src="/ui/app.js"></script>
+</body>
+</html>

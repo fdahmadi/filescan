@@ -1,0 +1,15 @@
+# Optional detection tools (install on the host/image when you need them)
+# CAPA: Mandiant capability analysis CLI
+flare-capa>=7.0.0
+
+# FLOSS: Mandiant obfuscated-string extraction CLI
+flare-floss>=3.0.0
+
+# Fuzzy hashes (need system libs on some platforms)
+#   apt: libfuzzy-dev  (for ssdeep)
+ssdeep>=3.4
+pytlsh>=4.0.0
+
+# LMD is NOT a pip package — install from:
+#   https://github.com/rfxn/linux-malware-detect
+# Then ensure `maldet` is on PATH (or set FILESCAN_LMD_BIN).

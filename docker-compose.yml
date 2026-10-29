@@ -1,0 +1,51 @@
+services:
+  api:
+    image: filescan-api:local
+    build: .
+    # Host network: Docker bridge port-publish returns empty replies on some hosts.
+    # Both api and clamav use host networking so the pilot API is reachable and
+    # ClamAV is reachable at 127.0.0.1:3310 without docker-proxy.
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      FILESCAN_CLAMAV_HOST: 127.0.0.1
+      FILESCAN_CLAMAV_PORT: 3310
+      FILESCAN_YARA_RULES_DIR: /app/rules/yara
+      FILESCAN_UPLOAD_DIR: /tmp/filescan/uploads
+      FILESCAN_RESULTS_DIR: /tmp/filescan/results
+      FILESCAN_CACHE_PATH: /tmp/filescan/hash_cache.json
+      FILESCAN_ALLOWLIST_PATH: /tmp/filescan/allowlist.json
+      FILESCAN_DENYLIST_PATH: /tmp/filescan/denylist.json
+      FILESCAN_ARCHIVE_MAX_DEPTH: "2"
+      FILESCAN_CAPA_RULES_DIR: /opt/capa-rules
+      FILESCAN_API_KEYS: ${FILESCAN_API_KEYS:-dev-demo-key}
+      FILESCAN_RATE_LIMIT_PER_MINUTE: ${FILESCAN_RATE_LIMIT_PER_MINUTE:-60}
+      FILESCAN_ABUSECH_AUTH_KEY: ${FILESCAN_ABUSECH_AUTH_KEY:-}
+    volumes:
+      - ./rules:/app/rules:ro
+      - ./config:/app/config:ro
+      - filescan_data:/tmp/filescan
+    depends_on:
+      clamav:
+        condition: service_healthy
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    restart: unless-stopped
+
+  clamav:
+    image: clamav/clamav:1.4
+    network_mode: host
+    volumes:
+      - clamav_data:/var/lib/clamav
+    # Official image listens on 3310 inside the container; with host network that is the host.
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/clamdcheck.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 12
+      start_period: 180s
+    restart: unless-stopped
+
+volumes:
+  clamav_data:
+  filescan_data:

@@ -1,0 +1,6 @@
+{
+  "hashes": [
+    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  ],
+  "_comment": "SHA256 of empty file — replace with known-good hashes. Copy to allowlist.json and set FILESCAN_ALLOWLIST_PATH."
+}

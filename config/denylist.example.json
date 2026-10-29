@@ -1,0 +1,8 @@
+{
+  "hashes": [
+    "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f"
+  ],
+  "ssdeep": [],
+  "tlsh": [],
+  "_comment": "SHA256 denylist + optional fuzzy refs. ssdeep scores 0-100 (higher=more similar). tlsh distance (lower=more similar)."
+}
