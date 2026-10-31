@@ -31,6 +31,7 @@ services:
     volumes:
       - ./rules:/app/rules:ro
       - ./config:/app/config:ro
+      - ./app/static/ui:/app/app/static/ui:ro
       - filescan_data:/tmp/filescan
     depends_on:
       clamav:

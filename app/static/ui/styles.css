@@ -293,6 +293,48 @@ html, body {
   word-break: break-all;
 }
 
+.scan-id-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.65rem;
+  margin-top: 0.15rem;
+}
+
+.scan-id-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.scan-id {
+  font-family: var(--font-mono, "IBM Plex Mono", ui-monospace, monospace);
+  font-size: 0.78rem;
+  color: var(--ink);
+  word-break: break-all;
+}
+
+.btn-copy {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+}
+
+.btn-copy:hover {
+  border-color: var(--ink);
+}
+
+.btn-copy:focus-visible {
+  outline: 2px solid rgba(15, 107, 92, 0.35);
+  outline-offset: 2px;
+}
+
 .engines {
   display: grid;
   gap: 0.55rem;

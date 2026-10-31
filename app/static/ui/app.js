@@ -11,6 +11,9 @@
   const verdictEl = document.getElementById("verdict");
   const summaryEl = document.getElementById("summary");
   const metaEl = document.getElementById("meta");
+  const scanIdRow = document.getElementById("scanIdRow");
+  const scanIdEl = document.getElementById("scanId");
+  const copyScanIdBtn = document.getElementById("copyScanId");
   const enginesEl = document.getElementById("engines");
   const healthLine = document.getElementById("healthLine");
 
@@ -145,13 +148,41 @@
     }
 
     const file = data.file || {};
+    const scanId = data.id != null && data.id !== "" ? String(data.id) : "";
     const bits = [
+      scanId && `id ${scanId}`,
       file.name && file.name,
       file.mime && file.mime,
       file.sha256 && `sha256 ${String(file.sha256).slice(0, 16)}…`,
       data.cache_hit ? "cache hit" : null,
     ].filter(Boolean);
     metaEl.textContent = bits.join(" · ");
+
+    if (scanId && scanIdRow && scanIdEl && copyScanIdBtn) {
+      scanIdEl.textContent = scanId;
+      scanIdRow.removeAttribute("hidden");
+      scanIdRow.style.display = "flex";
+      copyScanIdBtn.textContent = "Copy";
+      copyScanIdBtn.onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(scanId);
+          copyScanIdBtn.textContent = "Copied";
+          setTimeout(() => {
+            copyScanIdBtn.textContent = "Copy";
+          }, 1500);
+        } catch {
+          copyScanIdBtn.textContent = "Failed";
+          setTimeout(() => {
+            copyScanIdBtn.textContent = "Copy";
+          }, 1500);
+        }
+      };
+    } else if (scanIdRow) {
+      if (scanIdEl) scanIdEl.textContent = "";
+      scanIdRow.setAttribute("hidden", "");
+      scanIdRow.style.display = "none";
+      if (copyScanIdBtn) copyScanIdBtn.onclick = null;
+    }
 
     enginesEl.innerHTML = "";
     engines.forEach((eng) => {

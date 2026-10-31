@@ -13,6 +13,8 @@ Index: [docs/README.md](docs/README.md) · **Status:** [docs/STATUS.en.md](docs/
 
 | Topic | Document |
 |-------|----------|
+| Employer brief (EN) | [EMPLOYER_BRIEF.en.md](docs/EMPLOYER_BRIEF.en.md) |
+| Employer brief (FA) | [EMPLOYER_BRIEF.fa.md](docs/EMPLOYER_BRIEF.fa.md) |
 | Overview | [OVERVIEW.en.md](docs/OVERVIEW.en.md) |
 | Demo runbook (3 min) | [DEMO.en.md](docs/DEMO.en.md) |
 | Test samples + scan results | [TEST_SAMPLES.en.md](docs/TEST_SAMPLES.en.md) |

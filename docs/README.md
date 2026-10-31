@@ -5,6 +5,8 @@
 | Topic | Document |
 |-------|----------|
 | Status — done / next / deferred | [STATUS.en.md](STATUS.en.md) |
+| Employer brief (EN) — flow + engines | [EMPLOYER_BRIEF.en.md](EMPLOYER_BRIEF.en.md) |
+| Employer brief (FA) — flow + engines | [EMPLOYER_BRIEF.fa.md](EMPLOYER_BRIEF.fa.md) |
 | Project overview (employer / team) | [OVERVIEW.en.md](OVERVIEW.en.md) |
 | 3-minute demo runbook | [DEMO.en.md](DEMO.en.md) |
 | Test samples pack + scan results (employer) | [TEST_SAMPLES.en.md](TEST_SAMPLES.en.md) |
