@@ -104,6 +104,9 @@ abuse.ch و YARAify هم سرویس Compose نیستند؛ فقط در صورت 
 
 ## ۳) ترتیب دقیق اجرای یک اسکن
 
+جزئیات سطح کد (میانبرها، ترتیب موتورها، اسکن اعضای آرشیو):  
+[SCAN_PIPELINE.en.md](SCAN_PIPELINE.en.md)
+
 Endpoint اصلی: `POST /v1/scan` با فایل (`multipart/form-data`) و فیلدهای اختیاری:
 
 - `sensitivity` = `lenient` | `balanced` | `strict` (پیش‌فرض: `balanced`)

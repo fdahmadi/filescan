@@ -104,6 +104,9 @@ Client / UI
 
 ## 3) Exact scan execution order
 
+Code-level detail (short-circuits, engine factory order, archive members):  
+[SCAN_PIPELINE.en.md](SCAN_PIPELINE.en.md)
+
 Main endpoint: `POST /v1/scan` with a file (`multipart/form-data`) and optional fields:
 
 - `sensitivity` = `lenient` | `balanced` | `strict` (default: `balanced`)

@@ -121,44 +121,42 @@ FILESCAN_CLAMAV_PORT=3310 \
 
 ## 4) Exact flow of one scan request
 
-Endpoint: `POST /v1/scan` with `multipart/form-data` field `file`
+Endpoint: `POST /v1/scan` (`multipart/form-data`: `file`, optional `sensitivity`, `use_remote_intel`)
 
-Code path: `app/api/routes.py` → `ScanOrchestrator.scan_file` → each engine
+Code path: `app/api/routes.py` → `ScanOrchestrator.scan_file` → engines → `aggregate_verdict`
+
+**Full ordered pipeline (shortcuts, engine list, archive members):**  
+→ [SCAN_PIPELINE.en.md](SCAN_PIPELINE.en.md)
+
+Summary:
 
 ```
-1) Client uploads a file
-2) routes.py reads all bytes
-3) Empty or over max size (default 32MB) → error
-4) Temp file is created
-5) orchestrator:
-     - creates a scan UUID
-     - stores a durable copy in upload_dir: {id}_{filename}
-     - computes SHA256 and MIME
-     - calls each engine in order (serial for now):
-         ClamAVEngine.scan(path)
-         YaraEngine.scan(path)
-     - builds final result with aggregate_verdict
-     - writes JSON to results_dir/{id}.json
-6) Full JSON is returned to the client
-7) Temp file is deleted
+1) Access checks + read upload (empty / oversize → error)
+2) Temp file + MIME policy (disallowed → HTTP 415)
+3) Orchestrator: UUID, durable copy, SHA256, optional ssdeep/tlsh, MIME
+4) Fast shortcuts (first hit stops):
+     denylist → malicious | allowlist → clean | cache hit | high-confidence fuzzy
+5) Serial engines: precheck → clamav → yara → oletools → lmd →
+                   capa → floss → pefile → abusech → yaraify
+   (remote hash engines skipped when use_remote_intel=false)
+6) If ZIP/TAR: controlled extract + re-scan members with local content engines
+7) aggregate_verdict(sensitivity) → persist JSON → return
+8) routes.py deletes the temp upload
 ```
 
 Other endpoints:
 
 | Method | Path | Role |
 |--------|------|------|
-| `GET` | `/v1/health` | PING ClamAV + YARA rules load status |
+| `GET` | `/v1/health` | Engine healthchecks + ClamAV version hint |
 | `GET` | `/v1/scan/{id}` | Read stored result from disk |
-| UI | `/docs` | FastAPI Swagger UI |
+| UI | `/docs` · `/ui` | Swagger · demo UI |
 
 ### Verdict logic (current)
 
-Code: `ScanOrchestrator.aggregate_verdict`
+Implementation: `app/services/verdict.py` (also exposed via `ScanOrchestrator.aggregate_verdict`).
 
-1. Any engine `infected` or `matched` → **malicious**
-2. Else any `suspicious` → **suspicious**
-3. Else all actionable engines `clean` → **clean**
-4. All skipped/error/unavailable → **error**
+Hard engines (e.g. ClamAV, YARA, oletools, LMD, hash intel, fuzzy) vs soft engines (precheck, CAPA, FLOSS, pefile, archive) are weighted by `sensitivity`. Details: [CORE_DETECTION.en.md](CORE_DETECTION.en.md).
 
 ---
 
@@ -304,7 +302,9 @@ Softer hits → `suspicious`
 
 Code: `app/services/orchestrator.py`
 
-- Loads engines from `build_engines()` (ClamAV, YARA, oletools, LMD, CAPA, FLOSS, abuse.ch, YARAify, …)
+- Owns the full scan pipeline: identity → hash lists → cache → fuzzy → engines → archive → verdict  
+  Step-by-step: [SCAN_PIPELINE.en.md](SCAN_PIPELINE.en.md)
+- Loads engines from `build_engines()` (precheck, ClamAV, YARA, oletools, LMD, CAPA, FLOSS, pefile, abuse.ch, YARAify)
 - Every engine shares: `scan(path) -> EngineResult` and `healthcheck()`
 - Later VirusTotal / commercial AV = new class, same interface; API unchanged
 
@@ -369,4 +369,4 @@ See [STATUS.en.md](STATUS.en.md). Practical notes:
 4. Engine results return as one JSON with a `verdict`.  
 5. Optional engines (LMD / CAPA / FLOSS / abuse.ch) follow the same adapter pattern; ExifTool / Loki / extra Clam feeds are deferred on purpose (see [NEXT_PATHS.en.md](NEXT_PATHS.en.md)).
 
-Related: [STATUS.en.md](STATUS.en.md) · [OVERVIEW.en.md](OVERVIEW.en.md) · [ARCHITECTURE.en.md](ARCHITECTURE.en.md) · [ROADMAP.en.md](ROADMAP.en.md) · [DEMO.en.md](DEMO.en.md)
+Related: [SCAN_PIPELINE.en.md](SCAN_PIPELINE.en.md) · [STATUS.en.md](STATUS.en.md) · [OVERVIEW.en.md](OVERVIEW.en.md) · [ARCHITECTURE.en.md](ARCHITECTURE.en.md) · [ROADMAP.en.md](ROADMAP.en.md) · [DEMO.en.md](DEMO.en.md)

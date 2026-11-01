@@ -14,6 +14,7 @@
 | Detection core (verdict, sensitivity, abuse.ch) | [CORE_DETECTION.en.md](CORE_DETECTION.en.md) |
 | Tools & libraries catalog (+ employer candidate engines §5c) | [TOOLS.en.md](TOOLS.en.md) |
 | How it works / ClamAV | [HOW_IT_WORKS.en.md](HOW_IT_WORKS.en.md) |
+| Scan pipeline (exact check order) | [SCAN_PIPELINE.en.md](SCAN_PIPELINE.en.md) |
 | Architecture | [ARCHITECTURE.en.md](ARCHITECTURE.en.md) |
 | Roadmap (long-term phases) | [ROADMAP.en.md](ROADMAP.en.md) |
 | Completed paths A / A+ / B + deferred | [NEXT_PATHS.en.md](NEXT_PATHS.en.md) |
